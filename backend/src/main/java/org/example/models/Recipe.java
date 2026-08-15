@@ -56,7 +56,7 @@ public class Recipe {
 
     public String getUsername() {return username;}
 
-    public Date getCreatedAt() {return createdAt;}
+    public java.sql.Date getCreatedAt() {return (java.sql.Date) createdAt;}
 
     public void setId(int id) {this.id = id;}
     public void setTitle(String title) {this.title = title;}
