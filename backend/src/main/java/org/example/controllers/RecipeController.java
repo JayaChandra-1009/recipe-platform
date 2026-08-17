@@ -5,6 +5,8 @@ import org.example.models.Recipe;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,11 +35,13 @@ public class RecipeController {
         return recipe;
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/user")
     public List<Recipe> getByUser(Principal principal) {
         return recipeDao.getByUsername(principal.getName());
     }
 
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public Recipe create(@RequestBody Recipe recipe, Principal principal){
@@ -45,8 +49,17 @@ public class RecipeController {
         return recipeDao.create(recipe);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{id}")
-    public Recipe updateRecipe(@RequestBody Recipe recipe, @PathVariable int id){
+    public Recipe updateRecipe(@RequestBody Recipe recipe, @PathVariable int id,Principal principal){
+        Recipe existing = recipeDao.getById(id);
+        if (existing == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found");
+        }
+        if (!existing.getUsername().equals(principal.getName()) && !isAdmin(principal)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this recipe");
+        }
+
         recipe.setId(id);
         int rows = recipeDao.updateRecipe(recipe);
         if (rows == 0) {
@@ -55,8 +68,17 @@ public class RecipeController {
         return recipeDao.getById(id);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{id}")
-    public int deleteRecipe(@PathVariable int id){
+    public int deleteRecipe(@PathVariable int id, Principal principal){
+        Recipe existing = recipeDao.getById(id);
+        if (existing == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found");
+        }
+        if (!existing.getUsername().equals(principal.getName()) && !isAdmin(principal)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this recipe");
+        }
+
         int rowsAffected = recipeDao.deleteRecipe(id);
         if(rowsAffected == 1){
             return rowsAffected;
@@ -89,5 +111,10 @@ public class RecipeController {
         return recipeDao.getSortedRecipes(sortBy, order);
     }
 
+    private boolean isAdmin(Principal principal) {
+        return ((Authentication) principal).getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ADMIN"));
+    }
 
 }

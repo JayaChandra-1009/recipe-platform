@@ -1,10 +1,12 @@
 package org.example;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 /**
  * The main class of the Spring Boot application.
  */
+@EnableMethodSecurity
 @org.springframework.boot.autoconfigure.SpringBootApplication
 public class SpringBootApplication {
     /**
