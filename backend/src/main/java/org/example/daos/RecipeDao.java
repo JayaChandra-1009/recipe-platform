@@ -99,4 +99,5 @@ public class RecipeDao {
                 "ORDER BY " + sortBy + " " + order;
         return jdbcTemplate.query(sql, this::mapToRecipe);
     }
+
 }
