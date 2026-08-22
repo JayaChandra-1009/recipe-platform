@@ -1,15 +1,27 @@
-import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Recipes from './pages/Recipes';
+import Cookbooks from './pages/Cookbooks';
+import Signup from "./pages/Signup.jsx";
+import {useState} from "react";
 
 function App() {
-  return (
-    <div>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        {/* <p> tag is a placeholder, You'll need to change the tag/component type later*/}
-        <p className="navbar-brand ms-4 nav-link">You've got this!</p>
-      </nav>
-      <hr />
-    </div>
-  );
+    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+
+
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+                <Route path="/recipes" element={isLoggedIn ? <Recipes /> : <Navigate to="/login" />} />
+                <Route path="/cookbooks" element={isLoggedIn ? <Cookbooks /> : <Navigate to="/login" />} />
+                <Route path="/" element={<Navigate to="/dashboard" />} />
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;
