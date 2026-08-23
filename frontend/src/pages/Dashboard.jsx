@@ -28,32 +28,35 @@ const Dashboard=()=>{
                     <p>Discover recipes and cookbooks from the community</p>
                 </div>
                 <h4 className={styles.mySectionTitle}>Public Recipes</h4>
-                <div className={"container overflow-x-auto"}>
-                <div className="row flex-nowrap">
-                    {recipes.map((recipe)=> (
-                        <div key={recipe.id} className="col-4">
-                            <div className="card h-100">
-                                <div className="card-body">
-                                    <div className="d-flex justify-content-between align-items-start">
-                                        <h5 className="card-title">{recipe.title}</h5>
-                                        <span className="badge bg-success">{recipe.dietaryType}</span>
+                <div className={"container"}>
+                    <div className={`${styles.myPublicRecipes} row`}>
+                        {recipes.slice(0, 9).map((recipe) => (
+                            <div key={recipe.id} className="col-md-4 mb-3">
+                                <div className="card h-100">
+                                    <div className="card-body">
+                                        <div className="d-flex justify-content-between align-items-start">
+                                            <h5 className="card-title">{recipe.title}</h5>
+                                            <span className="badge bg-success">{recipe.dietaryType}</span>
+                                        </div>
+                                        <p className="card-text text-muted">{recipe.description}</p>
+                                        <p className="card-text">
+                                            <small className="text-muted">🍴 {recipe.cuisineType}</small>
+                                            <small className="text-muted ms-3">⏱ {recipe.cookingTime} mins</small>
+                                        </p>
                                     </div>
-                                    <p className="card-text text-muted">{recipe.description}</p>
-                                    <p className="card-text">
-                                        <small className="text-muted">🍴 {recipe.cuisineType}</small>
-                                        <small className="text-muted ms-3">⏱ {recipe.cookingTime} mins</small>
-                                    </p>
                                 </div>
                             </div>
+                        ))}
+                        <div className="text-end mt-2 me-3">
+                            <a href="/recipes" className="text-decoration-none">View all Recipes →</a>
                         </div>
-                    ))}
+                    </div>
                 </div>
-            </div>
                 <h4 className={styles.mySectionTitle}>Public Cookbooks</h4>
-                <div className={" container overflow-x-auto"}>
-                    <div className="row flex-nowrap">
-                        {cookbooks.map((cookbook)=> (
-                            <div key={cookbook.id} className="col-4">
+                <div className={" container"}>
+                    <div className="row">
+                        {cookbooks.slice(0, 3).map((cookbook) => (
+                            <div key={cookbook.id} className="col-md-4 mb-3">
                                 <div className="card h-100">
                                     <div className="card-body">
                                         <div className="d-flex justify-content-between align-items-start">
@@ -64,6 +67,9 @@ const Dashboard=()=>{
                                 </div>
                             </div>
                         ))}
+                        <div className="text-end mt-2 me-3">
+                            <a href="/cookbooks" className="text-decoration-none">View all Cookbooks →</a>
+                        </div>
                     </div>
                 </div>
             </div>

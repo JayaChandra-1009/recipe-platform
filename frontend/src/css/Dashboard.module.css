@@ -40,3 +40,7 @@
     transform: translateY(-4px);
     box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
+
+.myPublicRecipes{
+    padding-bottom: 20px;
+}
