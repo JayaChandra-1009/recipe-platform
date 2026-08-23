@@ -1,0 +1,42 @@
+.myPage {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding-bottom: 40px;
+}
+
+.myHero {
+    background: linear-gradient(135deg, #198754, #0d6efd);
+    color: white;
+    padding: 30px 24px;
+    margin-bottom: 24px;
+}
+
+.myHero h2 {
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.myHero p {
+    margin: 4px 0 0;
+    opacity: 0.85;
+    font-size: 0.95rem;
+}
+
+.mySectionTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #444;
+    border-left: 4px solid #198754;
+    padding-left: 10px;
+    margin: 0 20px 12px;
+}
+
+.myCard {
+    margin-bottom: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.myCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}

@@ -1,4 +1,9 @@
+import Navbar from "../components/Navbar.jsx";
+
 const Recipes=()=>{
-    return <h1>Recipes page</h1>
+    return <>
+        <Navbar></Navbar>
+        <h1>Recipes Page</h1>
+    </>
 }
 export default Recipes;
