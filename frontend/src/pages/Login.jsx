@@ -13,7 +13,7 @@ const Login=()=>{
             const response= await login(Username,Password);
             localStorage.setItem('token',response.data.accessToken.token);
             localStorage.setItem('Username',Username);
-            navigate('/dashboard');
+            window.location.href = '/dashboard';
         }
         catch{
             setError("Invalid Username or Password");
