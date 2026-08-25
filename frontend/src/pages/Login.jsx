@@ -27,14 +27,14 @@ const Login=()=>{
                 <input type="text" className="form-control" placeholder="Enter Username"
                        value={Username}
                        onChange={(e) => setUsername(e.target.value)}
-                       />
+                       required/>
             </div>
             <div className="mb-3">
                 <label htmlFor="exampleInputPassword1" className="form-label">Password</label>
                 <input type="password" className="form-control" placeholder="Enter the Password"
                        value={Password}
                        onChange={(e) => setPassword(e.target.value)}
-                       />
+                       required />
             </div>
             {error && <p className="text-danger">{error}</p>}
             <div className="mt-3">
