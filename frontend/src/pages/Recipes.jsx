@@ -1,8 +1,8 @@
 import Navbar from "../components/Navbar.jsx";
-import {useEffect, useState} from "react";
-import styles from "../css/Dashboard.module.css";
+import commonStyles from "../css/Common.module.css";
+import { useEffect, useState } from "react";
+import { createRecipe, deleteRecipe, getMyRecipes, getPublicRecipes, updateRecipe } from "../services/api.js";
 import Loading from "../components/Loading.jsx";
-import {createRecipe, deleteRecipe, getMyRecipes, getPublicRecipes, updateRecipe} from "../services/api.js";
 
 const Recipes = () => {
     const [activeTab, setActiveTab] = useState("mine");
@@ -11,38 +11,56 @@ const Recipes = () => {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingRecipe, setEditingRecipe] = useState(null);
-
     const [searchTerm, setSearchTerm] = useState('');
-
+    const [sortBy, setSortBy] = useState('title');
+    const [order, setOrder] = useState('ASC');
     const [publicSearchTerm, setPublicSearchTerm] = useState('');
     const [publicSortBy, setPublicSortBy] = useState('title');
     const [publicOrder, setPublicOrder] = useState('ASC');
+    const [newRecipe, setNewRecipe] = useState({
+        title: '', description: '', instructions: '',
+        cookingTime: '', cuisineType: '', dietaryType: 'VEGETARIAN', isPublic: true
+    });
 
+    /* Fetch both public and user recipes on page load */
+    useEffect(() => {
+        const fetchData = async () => {
+            const publicRes = await getPublicRecipes();
+            const myRes = await getMyRecipes();
+            setPublicRecipes(publicRes.data);
+            setMyRecipes(myRes.data);
+            setLoading(false);
+        };
+        fetchData();
+    }, []);
+
+    /* Returns correct badge color based on dietary type */
+    const getBadgeClass = (dietaryType) => {
+        if (dietaryType === 'NON_VEGETARIAN') return 'badge bg-danger';
+        if (dietaryType === 'VEGAN') return 'badge bg-info text-dark';
+        return 'badge bg-success';
+    };
+
+    /* Filter and sort my recipes locally without API calls */
     const filteredRecipes = myRecipes.filter(r =>
         r.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    const [sortBy, setSortBy] = useState('title');
-    const [order, setOrder] = useState('ASC');
     const sortedRecipes = [...filteredRecipes].sort((a, b) => {
         if (sortBy === 'title') {
-            return order === 'ASC'
-                ? a.title.localeCompare(b.title)
-                : b.title.localeCompare(a.title);
-        } else {
-            return order === 'ASC'
-                ? a.cookingTime - b.cookingTime
-                : b.cookingTime - a.cookingTime;
+            return order === 'ASC' ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title);
         }
+        return order === 'ASC' ? a.cookingTime - b.cookingTime : b.cookingTime - a.cookingTime;
     });
-    const [newRecipe, setNewRecipe] = useState({
-        title: '',
-        description: '',
-        instructions: '',
-        cookingTime: '',
-        cuisineType: '',
-        dietaryType: 'VEGETARIAN',
-        isPublic: true
+
+    /* Filter and sort public recipes locally without API calls */
+    const filteredPublicRecipes = publicRecipes.filter(r =>
+        r.title.toLowerCase().includes(publicSearchTerm.toLowerCase())
+    );
+    const sortedPublicRecipes = [...filteredPublicRecipes].sort((a, b) => {
+        if (publicSortBy === 'title') {
+            return publicOrder === 'ASC' ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title);
+        }
+        return publicOrder === 'ASC' ? a.cookingTime - b.cookingTime : b.cookingTime - a.cookingTime;
     });
 
     const handleDelete = async (id) => {
@@ -74,111 +92,84 @@ const Recipes = () => {
         setShowForm(false);
     };
 
-    const filteredPublicRecipes = publicRecipes.filter(r =>
-        r.title.toLowerCase().includes(publicSearchTerm.toLowerCase())
-    );
+    return (
+        <>
+            <Navbar />
+            <div className={commonStyles.myPage}>
+                {/* Tab switcher between public and my recipes */}
+                <ul className="nav nav-tabs px-4 pt-3">
+                    <li className="nav-item">
+                        <button className={`nav-link ${activeTab === 'public' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('public')}>
+                            All Public Recipes
+                        </button>
+                    </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${activeTab === 'mine' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('mine')}>
+                            My Recipes
+                        </button>
+                    </li>
+                </ul>
 
-    const sortedPublicRecipes = [...filteredPublicRecipes].sort((a, b) => {
-        if (publicSortBy === 'title') {
-            return publicOrder === 'ASC'
-                ? a.title.localeCompare(b.title)
-                : b.title.localeCompare(a.title);
-        } else {
-            return publicOrder === 'ASC'
-                ? a.cookingTime - b.cookingTime
-                : b.cookingTime - a.cookingTime;
-        }
-    });
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const publicRes = await getPublicRecipes();
-            const myRes = await getMyRecipes();
-            setPublicRecipes(publicRes.data);
-            setMyRecipes(myRes.data);
-            setLoading(false);
-        };
-        fetchData();
-    }, []);
-    return <>
-        <Navbar></Navbar>
-        <ul className="nav nav-tabs mb-3">
-            <li className="nav-item">
-                <button
-                    className={`nav-link ${activeTab === 'public' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('public')}>
-                    All Public Recipes
-                </button>
-            </li>
-            <li className="nav-item">
-                <button
-                    className={`nav-link ${activeTab === 'mine' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('mine')}>
-                    My Recipes
-                </button>
-            </li>
-        </ul>
-        {activeTab === "public" && (loading ? (<Loading></Loading>) : (
-            <>
-                <h4 className={styles.mySectionTitle}>Public Recipes</h4>
-                <div className="d-flex gap-2 mb-3">
-                    <input className="form-control" placeholder="Search public recipes..."
-                           value={publicSearchTerm}
-                           onChange={e => setPublicSearchTerm(e.target.value)}/>
-                    <select className="form-select w-auto"
-                            value={publicSortBy} onChange={e => setPublicSortBy(e.target.value)}>
-                        <option value="title">Title</option>
-                        <option value="cookingTime">Cooking Time</option>
-                    </select>
-                    <select className="form-select w-auto"
-                            value={publicOrder} onChange={e => setPublicOrder(e.target.value)}>
-                        <option value="ASC">A → Z</option>
-                        <option value="DESC">Z → A</option>
-                    </select>
-                </div>
-                <div className={"container"}>
-                    <div className={`${styles.myPublicRecipes} row`}>
-                        {sortedPublicRecipes.map((recipe) => (
-                            <div key={recipe.id} className="col-md-4 mb-3">
-                                <div className="card h-100">
-                                    <div className="card-body">
-                                        <div className="d-flex justify-content-between align-items-start">
-                                            <h5 className="card-title">{recipe.title}</h5>
-                                            <span className="badge bg-success">{recipe.dietaryType}</span>
+                {/* All public recipes tab */}
+                {activeTab === "public" && (loading ? <Loading /> : (
+                    <div className="container mt-3">
+                        <h4 className={commonStyles.mySectionTitle}>Public Recipes</h4>
+                        <div className="d-flex gap-2 mb-3">
+                            <input className="form-control" placeholder="Search public recipes..."
+                                   value={publicSearchTerm}
+                                   onChange={e => setPublicSearchTerm(e.target.value)} />
+                            <select className="form-select w-auto"
+                                    value={publicSortBy} onChange={e => setPublicSortBy(e.target.value)}>
+                                <option value="title">Title</option>
+                                <option value="cookingTime">Cooking Time</option>
+                            </select>
+                            <select className="form-select w-auto"
+                                    value={publicOrder} onChange={e => setPublicOrder(e.target.value)}>
+                                <option value="ASC">A → Z</option>
+                                <option value="DESC">Z → A</option>
+                            </select>
+                        </div>
+                        <div className="row">
+                            {sortedPublicRecipes.map((recipe) => (
+                                <div key={recipe.id} className={`col-md-4 mb-3 ${commonStyles.myCard}`}>
+                                    <div className="card h-100">
+                                        <div className="card-body">
+                                            <div className="d-flex justify-content-between align-items-start">
+                                                <h5 className="card-title">{recipe.title}</h5>
+                                                <span className={getBadgeClass(recipe.dietaryType)}>
+                                                    {recipe.dietaryType}
+                                                </span>
+                                            </div>
+                                            <p className="card-text text-muted">{recipe.description}</p>
+                                            <p className="card-text">
+                                                <small className="text-muted">🍴 {recipe.cuisineType}</small>
+                                                <small className="text-muted ms-3">⏱ {recipe.cookingTime} mins</small>
+                                            </p>
                                         </div>
-                                        <p className="card-text text-muted">{recipe.description}</p>
-                                        <p className="card-text">
-                                            <small className="text-muted">🍴 {recipe.cuisineType}</small>
-                                            <small className="text-muted ms-3">⏱ {recipe.cookingTime} mins</small>
-                                        </p>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
+                ))}
 
-            </>
-        ))}
-
-        {activeTab === "mine" && (
-            loading ? <Loading/> : (
-                <>
+                {/* My recipes tab with create, edit, delete, search and sort */}
+                {activeTab === "mine" && (loading ? <Loading /> : (
                     <div className="container mt-3">
-
-
                         <div className="d-flex justify-content-between align-items-center mb-3">
-                            <h4 className={styles.mySectionTitle}>My Recipes</h4>
+                            <h4 className={commonStyles.mySectionTitle}>My Recipes</h4>
                             {!showForm && (
-                                <button
-                                    className="btn btn-success"
-                                    onClick={() => setShowForm(true)}>
+                                <button className="btn btn-success" onClick={() => setShowForm(true)}>
                                     + Add Recipe
                                 </button>
                             )}
                         </div>
+
+                        {/* Create or edit recipe form */}
                         {showForm && (
-                            <div className="card mt-3 p-3 mb-4">
+                            <div className="card p-3 mb-4">
                                 <h5>{editingRecipe ? 'Edit Recipe' : 'Add New Recipe'}</h5>
                                 <form onSubmit={editingRecipe ? handleUpdate : handleCreate}>
                                     <div className="row mb-2">
@@ -186,58 +177,45 @@ const Recipes = () => {
                                             <input className="form-control" placeholder="Title" required
                                                    value={editingRecipe ? editingRecipe.title : newRecipe.title}
                                                    onChange={e => editingRecipe
-                                                       ? setEditingRecipe({...editingRecipe, title: e.target.value})
-                                                       : setNewRecipe({...newRecipe, title: e.target.value})}/>
+                                                       ? setEditingRecipe({ ...editingRecipe, title: e.target.value })
+                                                       : setNewRecipe({ ...newRecipe, title: e.target.value })} />
                                         </div>
                                         <div className="col-md-6">
                                             <input className="form-control" placeholder="Description"
                                                    value={editingRecipe ? editingRecipe.description : newRecipe.description}
                                                    onChange={e => editingRecipe
-                                                       ? setEditingRecipe({
-                                                           ...editingRecipe,
-                                                           description: e.target.value
-                                                       })
-                                                       : setNewRecipe({...newRecipe, description: e.target.value})}/>
+                                                       ? setEditingRecipe({ ...editingRecipe, description: e.target.value })
+                                                       : setNewRecipe({ ...newRecipe, description: e.target.value })} />
                                         </div>
                                     </div>
                                     <div className="mb-2">
-                <textarea className="form-control" placeholder="Instructions" required
-                          value={editingRecipe ? editingRecipe.instructions : newRecipe.instructions}
-                          onChange={e => editingRecipe
-                              ? setEditingRecipe({...editingRecipe, instructions: e.target.value})
-                              : setNewRecipe({...newRecipe, instructions: e.target.value})}/>
+                                        <textarea className="form-control" placeholder="Instructions" required
+                                                  value={editingRecipe ? editingRecipe.instructions : newRecipe.instructions}
+                                                  onChange={e => editingRecipe
+                                                      ? setEditingRecipe({ ...editingRecipe, instructions: e.target.value })
+                                                      : setNewRecipe({ ...newRecipe, instructions: e.target.value })} />
                                     </div>
                                     <div className="row mb-2">
                                         <div className="col-md-4">
-                                            <input className="form-control" type="number"
-                                                   placeholder="Cooking time (mins)"
+                                            <input className="form-control" type="number" placeholder="Cooking time (mins)"
                                                    value={editingRecipe ? editingRecipe.cookingTime : newRecipe.cookingTime}
                                                    onChange={e => editingRecipe
-                                                       ? setEditingRecipe({
-                                                           ...editingRecipe,
-                                                           cookingTime: e.target.value
-                                                       })
-                                                       : setNewRecipe({...newRecipe, cookingTime: e.target.value})}/>
+                                                       ? setEditingRecipe({ ...editingRecipe, cookingTime: e.target.value })
+                                                       : setNewRecipe({ ...newRecipe, cookingTime: e.target.value })} />
                                         </div>
                                         <div className="col-md-4">
                                             <input className="form-control" placeholder="Cuisine type (e.g. ITALIAN)"
                                                    value={editingRecipe ? editingRecipe.cuisineType : newRecipe.cuisineType}
                                                    onChange={e => editingRecipe
-                                                       ? setEditingRecipe({
-                                                           ...editingRecipe,
-                                                           cuisineType: e.target.value
-                                                       })
-                                                       : setNewRecipe({...newRecipe, cuisineType: e.target.value})}/>
+                                                       ? setEditingRecipe({ ...editingRecipe, cuisineType: e.target.value })
+                                                       : setNewRecipe({ ...newRecipe, cuisineType: e.target.value })} />
                                         </div>
                                         <div className="col-md-4">
                                             <select className="form-select"
                                                     value={editingRecipe ? editingRecipe.dietaryType : newRecipe.dietaryType}
                                                     onChange={e => editingRecipe
-                                                        ? setEditingRecipe({
-                                                            ...editingRecipe,
-                                                            dietaryType: e.target.value
-                                                        })
-                                                        : setNewRecipe({...newRecipe, dietaryType: e.target.value})}>
+                                                        ? setEditingRecipe({ ...editingRecipe, dietaryType: e.target.value })
+                                                        : setNewRecipe({ ...newRecipe, dietaryType: e.target.value })}>
                                                 <option value="VEGETARIAN">Vegetarian</option>
                                                 <option value="VEGAN">Vegan</option>
                                                 <option value="NON_VEGETARIAN">Non-Vegetarian</option>
@@ -248,8 +226,8 @@ const Recipes = () => {
                                         <input className="form-check-input" type="checkbox"
                                                checked={editingRecipe ? editingRecipe.isPublic : newRecipe.isPublic}
                                                onChange={e => editingRecipe
-                                                   ? setEditingRecipe({...editingRecipe, isPublic: e.target.checked})
-                                                   : setNewRecipe({...newRecipe, isPublic: e.target.checked})}/>
+                                                   ? setEditingRecipe({ ...editingRecipe, isPublic: e.target.checked })
+                                                   : setNewRecipe({ ...newRecipe, isPublic: e.target.checked })} />
                                         <label className="form-check-label">Make public</label>
                                     </div>
                                     <div className="d-flex gap-2">
@@ -257,10 +235,7 @@ const Recipes = () => {
                                             {editingRecipe ? 'Update Recipe' : 'Save Recipe'}
                                         </button>
                                         <button type="button" className="btn btn-secondary"
-                                                onClick={() => {
-                                                    setShowForm(false);
-                                                    setEditingRecipe(null);
-                                                }}>
+                                                onClick={() => { setShowForm(false); setEditingRecipe(null); }}>
                                             Cancel
                                         </button>
                                     </div>
@@ -268,11 +243,11 @@ const Recipes = () => {
                             </div>
                         )}
 
-
+                        {/* Search and sort controls */}
                         <div className="d-flex gap-2 mb-3">
                             <input className="form-control" placeholder="Search my recipes..."
                                    value={searchTerm}
-                                   onChange={e => setSearchTerm(e.target.value)}/>
+                                   onChange={e => setSearchTerm(e.target.value)} />
                             <select className="form-select w-auto"
                                     value={sortBy} onChange={e => setSortBy(e.target.value)}>
                                 <option value="title">Title</option>
@@ -285,45 +260,42 @@ const Recipes = () => {
                             </select>
                         </div>
 
-
+                        {/* Recipe cards grid */}
                         <div className="row">
                             {sortedRecipes.map((recipe) => (
-                                <div key={recipe.id} className="col-md-4 mb-3">
+                                <div key={recipe.id} className={`col-md-4 mb-3 ${commonStyles.myCard}`}>
                                     <div className="card h-100">
                                         <div className="card-body">
                                             <div className="d-flex justify-content-between align-items-start">
                                                 <h5 className="card-title">{recipe.title}</h5>
-                                                <span className="badge bg-success">{recipe.dietaryType}</span>
+                                                <span className={getBadgeClass(recipe.dietaryType)}>
+                                                    {recipe.dietaryType}
+                                                </span>
                                             </div>
                                             <p className="card-text text-muted">{recipe.description}</p>
                                             <p className="card-text">
                                                 <small className="text-muted">🍴 {recipe.cuisineType}</small>
                                                 <small className="text-muted ms-3">⏱ {recipe.cookingTime} mins</small>
-                                                <small
-                                                    className="text-muted ms-3">{recipe.isPublic ? '🌍 Public' : '🔒 Private'}</small>
+                                                <small className="text-muted ms-3">
+                                                    {recipe.isPublic ? '🌍 Public' : '🔒 Private'}
+                                                </small>
                                             </p>
                                         </div>
                                         <div className="card-footer d-flex gap-2">
-                                            <button
-                                                className="btn btn-primary btn-sm flex-fill"
-                                                onClick={() => handleEdit(recipe)}>
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm flex-fill"
-                                                onClick={() => handleDelete(recipe.id)}>
-                                                Delete
-                                            </button>
+                                            <button className="btn btn-primary btn-sm flex-fill"
+                                                    onClick={() => handleEdit(recipe)}>Edit</button>
+                                            <button className="btn btn-danger btn-sm flex-fill"
+                                                    onClick={() => handleDelete(recipe.id)}>Delete</button>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
-                </>
-            )
-        )}
-    </>
+                ))}
+            </div>
+        </>
+    );
+};
 
-}
 export default Recipes;

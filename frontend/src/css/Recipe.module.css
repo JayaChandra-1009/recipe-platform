@@ -1,0 +1,22 @@
+.myPage {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.mySectionTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #444;
+    border-left: 4px solid #198754;
+    padding-left: 10px;
+}
+
+.myCard {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.myCard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
